@@ -12,7 +12,7 @@ reads = tool1.count()
 # Finds the start positions of all reads and stores these to a list 
 # called "Storage"
 storage = []
-for x in range(0, reads):
+for x in range(0, reads-1):
     feature = tool1[x]
     if feature.strand == '+':
         start_pos = (feature.start)
@@ -22,7 +22,7 @@ for x in range(0, reads):
         storage.append(start_pos)
 
 # Counts the occurrences of a start position and stores the 
-# position and the number of occurrences in a dictionary 
+# position and the number of occurrences in a dictionary.
 """result = {} 
 for x in storage:
     count = storage.count(x)
