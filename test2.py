@@ -11,9 +11,14 @@ reads = tool1.count()
 
 # Finds the start positions of all reads and stores these to a list 
 # called "Storage"
+
 storage = []
+<<<<<<< HEAD
 for x in range(0, reads-1):
     feature = tool1[x]
+=======
+for feature in tool1:
+>>>>>>> 6a51dd6641be4396dca894c778472e5e54c9b200
     if feature.strand == '+':
         start_pos = (feature.start)
         storage.append(start_pos)
