@@ -1,6 +1,5 @@
 from pybedtools import BedTool
 from collections import Counter
-%matplotlib qt
 import matplotlib
 import matplotlib.pyplot as plt
 import pylab as pl
