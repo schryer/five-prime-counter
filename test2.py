@@ -1,43 +1,48 @@
-#import pybedtools
 from pybedtools import BedTool
 from collections import Counter
+%matplotlib qt
+import matplotlib
+import matplotlib.pyplot as plt
+import pylab as pl
+import numpy as np
+import csv
 
 
-# The chosen input file is a random test file I got from the Internet 
-# and modified for testing my code. Gets the total number of reads from file.
-tool1 = BedTool("test2.bed")
-reads = tool1.count()
+print """This script will take a .bed file as input, find the starting points of all reads 
+and output a table containing all thestarting points and the number of reads that start at this point"""
+
+filepath = raw_input("Enter the path of the file you wish to analyze: ")
+tool1 = BedTool(filepath)
 
 
 # Finds the start positions of all reads and stores these to a list 
-# called "Storage"
+# called "storage"
+# Counts the occurrences of every start position and stores the 
+# position and the number of occurrences in a dictionary called "result"
 
 storage = []
-<<<<<<< HEAD
-for x in range(0, reads-1):
-    feature = tool1[x]
-=======
+
 for feature in tool1:
->>>>>>> 6a51dd6641be4396dca894c778472e5e54c9b200
+
     if feature.strand == '+':
         start_pos = (feature.start)
         storage.append(start_pos)
     elif feature.strand == '-':
-        start_pos = (feature.stop)
+        start_pos = (feature.stop - 1)
         storage.append(start_pos)
 
-# Counts the occurrences of a start position and stores the 
-# position and the number of occurrences in a dictionary.
-"""result = {} 
-for x in storage:
-    count = storage.count(x)
-    result[x] = count
-    while count > 1:
-        storage.remove(x)
-        count = count - 1 
-        
-for x in result:
-    print x, result[x]"""
-
 result = Counter(storage)
-print result
+
+# Draws a histogram of the data from the file. So far haven't figured out how to add labels to every starting point.
+
+'''length = len(storage)
+fig = plt.figure(figsize=(80,40), dpi=100)   
+pl.hist(storage, length, histtype = "step", align = "mid", color = "black", label = "reads")
+plt.legend() '''
+
+# Outputs a table with the starting points and the number of its occurrences.
+output = csv.writer(open("output.csv", "w"))
+for key, val in result.items():
+    output.writerow([key, val])
+print "Analysis complete"
+
