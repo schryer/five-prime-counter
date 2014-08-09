@@ -1,6 +1,5 @@
 from pybedtools import BedTool
 from collections import Counter
-%matplotlib qt
 import matplotlib
 import matplotlib.pyplot as plt
 import pylab as pl
@@ -35,10 +34,11 @@ result = Counter(storage)
 
 # Draws a histogram of the data from the file. So far haven't figured out how to add labels to every starting point.
 
-'''length = len(storage)
+length = len(storage)
 fig = plt.figure(figsize=(80,40), dpi=100)   
 pl.hist(storage, length, histtype = "step", align = "mid", color = "black", label = "reads")
-plt.legend() '''
+plt.legend()
+plt.show()
 
 # Outputs a table with the starting points and the number of its occurrences.
 output = csv.writer(open("output.csv", "w"))
