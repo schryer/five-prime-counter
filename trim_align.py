@@ -69,7 +69,7 @@ class ParseFastQ(object):
         return list(elemList)
 
 file_path = raw_input("Enter the path of the reads file ")
-output=gzip.open('output.fastq.gz', 'w')
+output=open('output.fastq', 'w')
 
 parser = ParseFastQ(file_path)
 
@@ -102,7 +102,7 @@ print 'FastQ modified!'
 def index_genome(reference_genome):
     output = os.system("bwa index -a is %s" % (reference_genome))
 def align(index):
-    output = os.system("bwa mem %s %s > aligned.sam" % (index, 'output.fastq.gz'))
+    output = os.system("bwa mem %s %s > aligned.sam" % (index, 'output.fastq'))
 
 while True:
     align_ask = raw_input('Do you want to align reads? ')
