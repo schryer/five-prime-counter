@@ -69,9 +69,11 @@ class ParseFastQ(object):
         return list(elemList)
 
 file_path = raw_input("Enter the path of the reads file ")
-output=open('output.fastq', 'w')
-
 parser = ParseFastQ(file_path)
+
+output = open('output.fastq', 'w')
+
+
 
         # ++++ Set up the loading bar +++ #
 #num_lines = sum(1 for line in open(file_path))
@@ -100,12 +102,14 @@ print 'FastQ modified!'
 
         # ++++ sets up indexing and aligning through 'bwa tools' ++++ #
 def index_genome(reference_genome):
-    output = os.system("bwa index -a is %s" % (reference_genome))
+    output = os.system("bwa index -a is {0}".format(reference_genome))
+
 def align(index):
     output = os.system("bwa mem %s %s > aligned.sam" % (index, 'output.fastq'))
 
 while True:
     align_ask = raw_input('Do you want to align reads? ')
+
     if align_ask == 'y' or align_ask =='yes':
         index_ask = raw_input('Do you need to index a reference genome? ')
         if index_ask == 'y' or index_ask =='yes':
@@ -122,9 +126,10 @@ while True:
             index = raw_input('Enter the name of indexed genome ')
             align(index)
         else:
-            print 'Sorry, that wasn\'t an answer I could understand. Try again!'
+            print 'Sorry, {0} is a strange answer that I do not understand. Try again!'.format(align_ask)
+
     elif align_ask == 'n' or align_ask == 'no':
         print 'Bye then!'
         break
     else:
-        print 'Sorry, that wasn\'t an answer I could understand. Try again!'
+        print 'Sorry, {0} is a strange answer that I do not understand. Try again!'.format(align_ask)
