@@ -1,11 +1,35 @@
-import sys
-import time
 import os
+import sys
+import glob
+import time
+import textwrap
+import argparse
+
 import bz2file
 import gzip
-#from progressbar import AnimatedMarker, Bar, BouncingBar, Counter, ETA, \
-#    ProgressBar, ReverseBar, RotatingMarker, \
-#    SimpleProgress, Timer
+
+
+def make_argument_parser():
+    '''Returns argument parser for this script.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=textwrap.dedent('''
+                                     This script trims sequences from an input file and aligns these to a reference genome.                                     
+                                     '''),
+                                     fromfile_prefix_chars='@')
+
+    dpg = parser.add_argument_group('Directory and file parameters')
+        
+    dpg.add_argument('-r', '--reference-genome', 
+                     dest='reference_genome', default=None, metavar='S', 
+                     help='Reference genome file.')
+    
+    dpg.add_argument('-i', '--input-file', 
+                     dest='input_filename', default=None, metavar='S', 
+                     help='Input filename containing fasta sequences.')
+        
+    return parser
+
 
 class ParseFastQ(object):
     """Returns a read-by-read fastQ parser analogous to file.readline()"""
@@ -68,68 +92,76 @@ class ParseFastQ(object):
         # ++++ Return fatsQ data as list ++++
         return list(elemList)
 
-file_path = raw_input("Enter the path of the reads file ")
-parser = ParseFastQ(file_path)
+def perform_trim(read_file_path, output_filename):
+    parser = ParseFastQ(read_file_path)    
 
-output = open('output.fastq', 'w')
+    print('Performing trim. Making trim file: {}'.format(output_filename))
+    output_file = open(output_filename, 'w')
 
+    for record in parser:
+        count = 0
+        for x in record[1][::-1]:
+            if x == 'A':
+                count += 1
+            else:
+                continue
+        record[1] = record[1][2:-count]   
+        record[3] = record[3][2:-count]
 
+        for line in record: 
+            output_file.write("%s\n" % line)
 
-        # ++++ Set up the loading bar +++ #
-#num_lines = sum(1 for line in open(file_path))
-#widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
-#pbar = ProgressBar(widgets=widgets, maxval=num_lines).start()    
-#i = 0
-
-        # ++++ remove 2 nucleotides from 3'-end and all A nucleotides from 5'-end in .fastq++++ #
-for record in parser:
-    count = 0
-    for x in record[1][::-1]:
-        if x == 'A':
-            count += 1
-        else:
-            continue
-    record[1] = record[1][2:-count]   
-    record[3] = record[3][2:-count]
-        
-    for line in record: 
-        output.write("%s\n" % line)
-#       i += 1
-#       pbar.update(i)
-#pbar.finish()
-
-print 'FastQ modified!'
-
-        # ++++ sets up indexing and aligning through 'bwa tools' ++++ #
 def index_genome(reference_genome):
-    output = os.system("bwa index -a is {0}".format(reference_genome))
+    cmd = "bwa index -a is {0}".format(reference_genome)
+    print('Running external command: {}'.format(cmd))
+    output = os.system(cmd)
 
-def align(index):
-    output = os.system("bwa mem %s %s > aligned.sam" % (index, 'output.fastq'))
+def perform_alignment(reference_genome, read_filename, output_filename):
 
-while True:
-    align_ask = raw_input('Do you want to align reads? ')
+    # Test if index files exist.
+    index_list = glob.glob('{}*'.format(reference_genome))
+    if len(index_list) != 6:
+        print('No index files found. Generating...')
+        cmd = "bwa index {}".format(reference_genome)
+        print('Running external command: {}'.format(cmd))
+        output = os.system(cmd)
 
-    if align_ask == 'y' or align_ask =='yes':
-        index_ask = raw_input('Do you need to index a reference genome? ')
-        if index_ask == 'y' or index_ask =='yes':
-            reference_genome = raw_input('Enter the path of the reference genome ')
-            count = 0
-            for x in reference_genome:
-                if x != '/':
-                    count += 1
-                else:
-                    continue
-            index = reference_genome[-count:]
-            align(index)
-        elif index_ask == 'n' or index_ask == 'no':
-            index = raw_input('Enter the name of indexed genome ')
-            align(index)
-        else:
-            print 'Sorry, {0} is a strange answer that I do not understand. Try again!'.format(align_ask)
+    # Run the alignment.
+    cmd = "bwa mem {} {} > {}".format(reference_genome, read_filename, output_filename)
+    print('Running external command: {}'.format(cmd))
+    output = os.system(cmd)
 
-    elif align_ask == 'n' or align_ask == 'no':
-        print 'Bye then!'
-        break
-    else:
-        print 'Sorry, {0} is a strange answer that I do not understand. Try again!'.format(align_ask)
+    print('Created alignment file: {}'.format(output_filename))
+
+
+def process_arguments(args):
+
+    # Get the root file name for the ref. genome
+    base_name = os.path.basename(args.input_filename)
+
+    # Get the root and extention of the base_name
+    root_ext = os.path.splitext(base_name)
+
+    # Make the trimmed base filename based on the read genome name
+    trimmed_output_base_filename = root_ext[0] + root_ext[1].replace('.', '_trimmed.')
+
+    # Make alignment filename.
+    alignment_output_base_filename = root_ext[0] + '_aligned.sam'
+
+    # Put these in the generation dir...
+    trimmed_output_filename = os.path.join('generated', trimmed_output_base_filename)
+    alignment_output_filename = os.path.join('generated', alignment_output_base_filename)
+
+    # Perform the trim operation.
+    perform_trim(args.input_filename, trimmed_output_filename)
+
+    # Perform the alignment.
+    perform_alignment(args.reference_genome, trimmed_output_filename, alignment_output_filename)
+
+            
+if __name__ == '__main__':
+
+    p = make_argument_parser()
+    args = p.parse_args()
+    process_arguments(args)
+
